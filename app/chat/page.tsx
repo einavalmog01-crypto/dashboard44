@@ -269,7 +269,7 @@ export default function ChatPage() {
       description="Chat with Cursor CLI AI assistant"
     >
       <div
-        className="-m-6 flex h-[calc(100vh-4rem)] flex-col"
+        className="-m-6 flex h-[calc(100%+3rem)] flex-col overflow-hidden"
         onDragOver={handleDragOver}
         onDragLeave={handleDragLeave}
         onDrop={handleDrop}
@@ -306,7 +306,7 @@ export default function ChatPage() {
           </div>
         </div>
 
-        <ScrollArea className="flex-1 p-4" ref={scrollRef}>
+        <ScrollArea className="flex-1 min-h-0 p-4" ref={scrollRef}>
           <div className="mx-auto max-w-3xl space-y-6">
             {messages.map((message) => (
               <div
