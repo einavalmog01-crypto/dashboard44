@@ -30,6 +30,14 @@ export function EnvironmentProvider({ children }: { children: ReactNode }) {
         const parsed = JSON.parse(stored) as EnvironmentConfig[]
         return parsed.map((env) => ({
           ...env,
+          cassandra: env.cassandra ?? {
+            contactPoints: "",
+            port: "9042",
+            localDataCenter: "",
+            keyspace: "",
+            username: "",
+            password: "",
+          },
           isConfigured: isEnvironmentConfigured(env),
         }))
       }

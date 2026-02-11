@@ -16,6 +16,7 @@ import {
   Globe,
   Terminal,
   KeyRound,
+  HardDrive,
 } from "lucide-react"
 import { Button } from "@/components/ui/button"
 import { Input } from "@/components/ui/input"
@@ -30,6 +31,7 @@ import type {
   AuthConfig,
   EndpointConfig,
   UnixConfig,
+  CassandraConfig,
 } from "@/lib/environment-config"
 import { isEnvironmentConfigured } from "@/lib/environment-config"
 
@@ -40,7 +42,7 @@ interface EnvironmentSettingsProps {
   onSave: (configs: EnvironmentConfig[]) => void
 }
 
-type ConnectionSection = "db" | "auth" | "endpoint" | "unix"
+type ConnectionSection = "db" | "cassandra" | "auth" | "endpoint" | "unix"
 
 export function EnvironmentSettings({ isOpen, onClose, environments, onSave }: EnvironmentSettingsProps) {
   const [configs, setConfigs] = useState<EnvironmentConfig[]>(environments)
@@ -77,6 +79,11 @@ const router = useRouter()
     setConnectionStatus((prev) => ({ ...prev, [`${envName}-unix`]: null }))
   }
 
+  const updateCassandraConfig = (envName: Environment, field: keyof CassandraConfig, value: string) => {
+    setConfigs((prev) => prev.map((c) => (c.name === envName ? { ...c, cassandra: { ...c.cassandra, [field]: value } } : c)))
+    setConnectionStatus((prev) => ({ ...prev, [`${envName}-cassandra`]: null }))
+  }
+
   const togglePassword = (key: string) => {
     setShowPasswords((prev) => ({ ...prev, [key]: !prev[key] }))
   }
@@ -107,6 +114,15 @@ const router = useRouter()
         case "unix":
           isValid = !!(config.unix.hostName && config.unix.userName && config.unix.password)
           break
+        case "cassandra":
+          isValid = !!(
+            config.cassandra.contactPoints &&
+            config.cassandra.localDataCenter &&
+            config.cassandra.keyspace &&
+            config.cassandra.username &&
+            config.cassandra.password
+          )
+          break
       }
     }
 
@@ -131,7 +147,8 @@ const handleCancel = () => {
   const getConfig = (envName: Environment) => configs.find((c) => c.name === envName)!
 
   const sectionTabs = [
-    { id: "db" as const, label: "Database", icon: Database },
+    { id: "db" as const, label: "Oracle", icon: Database },
+    { id: "cassandra" as const, label: "Cassandra", icon: HardDrive },
     { id: "auth" as const, label: "Auth", icon: KeyRound },
     { id: "endpoint" as const, label: "Endpoint", icon: Globe },
     { id: "unix" as const, label: "UNIX", icon: Terminal },
@@ -199,7 +216,7 @@ const handleCancel = () => {
                       <div className="flex items-center justify-between">
                         <div className="flex items-center gap-2">
                           <Database className="h-4 w-4 text-primary" />
-                          <CardTitle className="text-base">Database Connection</CardTitle>
+                          <CardTitle className="text-base">Oracle Database Connection</CardTitle>
                         </div>
                         {connectionStatus[`${env.name}-db`] === "success" && (
                           <span className="flex items-center gap-1 text-xs text-neon-green">
@@ -353,6 +370,149 @@ const handleCancel = () => {
                           <>
                             <Database className="h-4 w-4 mr-2" />
                             Test DB Connection
+                          </>
+                        )}
+                      </Button>
+                    </CardContent>
+                  </Card>
+                )}
+
+                {/* Cassandra Section */}
+                {activeSection === "cassandra" && (
+                  <Card className="bg-secondary/30 border-border">
+                    <CardHeader className="pb-3">
+                      <div className="flex items-center justify-between">
+                        <div className="flex items-center gap-2">
+                          <HardDrive className="h-4 w-4 text-primary" />
+                          <CardTitle className="text-base">Cassandra Connection</CardTitle>
+                        </div>
+                        {connectionStatus[`${env.name}-cassandra`] === "success" && (
+                          <span className="flex items-center gap-1 text-xs text-neon-green">
+                            <CheckCircle2 className="h-3 w-3" /> Connected
+                          </span>
+                        )}
+                        {connectionStatus[`${env.name}-cassandra`] === "error" && (
+                          <span className="flex items-center gap-1 text-xs text-destructive">
+                            <AlertCircle className="h-3 w-3" /> Connection Failed
+                          </span>
+                        )}
+                      </div>
+                      <CardDescription className="text-xs">Apache Cassandra database connection details</CardDescription>
+                    </CardHeader>
+                    <CardContent className="space-y-4">
+                      <div className="grid grid-cols-2 gap-4">
+                        <div className="space-y-2">
+                          <Label className="text-xs flex items-center gap-1.5">
+                            <Server className="h-3 w-3 text-muted-foreground" />
+                            Contact Points
+                          </Label>
+                          <Input
+                            placeholder="e.g., 127.0.0.1, 10.0.0.2"
+                            value={getConfig(env.name).cassandra.contactPoints}
+                            onChange={(e) => updateCassandraConfig(env.name, "contactPoints", e.target.value)}
+                            className="bg-background/50 border-border text-sm"
+                          />
+                        </div>
+                        <div className="space-y-2">
+                          <Label className="text-xs flex items-center gap-1.5">
+                            <Server className="h-3 w-3 text-muted-foreground" />
+                            Port
+                          </Label>
+                          <Input
+                            placeholder="9042"
+                            value={getConfig(env.name).cassandra.port}
+                            onChange={(e) => updateCassandraConfig(env.name, "port", e.target.value)}
+                            className="bg-background/50 border-border text-sm"
+                          />
+                        </div>
+                      </div>
+
+                      <div className="grid grid-cols-2 gap-4">
+                        <div className="space-y-2">
+                          <Label className="text-xs flex items-center gap-1.5">
+                            <Globe className="h-3 w-3 text-muted-foreground" />
+                            Local Data Center
+                          </Label>
+                          <Input
+                            placeholder="e.g., datacenter1"
+                            value={getConfig(env.name).cassandra.localDataCenter}
+                            onChange={(e) => updateCassandraConfig(env.name, "localDataCenter", e.target.value)}
+                            className="bg-background/50 border-border text-sm"
+                          />
+                        </div>
+                        <div className="space-y-2">
+                          <Label className="text-xs flex items-center gap-1.5">
+                            <Database className="h-3 w-3 text-muted-foreground" />
+                            Keyspace
+                          </Label>
+                          <Input
+                            placeholder="e.g., my_keyspace"
+                            value={getConfig(env.name).cassandra.keyspace}
+                            onChange={(e) => updateCassandraConfig(env.name, "keyspace", e.target.value)}
+                            className="bg-background/50 border-border text-sm"
+                          />
+                        </div>
+                      </div>
+
+                      <div className="grid grid-cols-2 gap-4">
+                        <div className="space-y-2">
+                          <Label className="text-xs flex items-center gap-1.5">
+                            <User className="h-3 w-3 text-muted-foreground" />
+                            Username
+                          </Label>
+                          <Input
+                            placeholder="Enter username"
+                            value={getConfig(env.name).cassandra.username}
+                            onChange={(e) => updateCassandraConfig(env.name, "username", e.target.value)}
+                            className="bg-background/50 border-border text-sm"
+                          />
+                        </div>
+                        <div className="space-y-2">
+                          <Label className="text-xs flex items-center gap-1.5">
+                            <Lock className="h-3 w-3 text-muted-foreground" />
+                            Password
+                          </Label>
+                          <div className="relative">
+                            <Input
+                              type={showPasswords[`${env.name}-cassandra`] ? "text" : "password"}
+                              placeholder="Enter password"
+                              value={getConfig(env.name).cassandra.password}
+                              onChange={(e) => updateCassandraConfig(env.name, "password", e.target.value)}
+                              className="bg-background/50 border-border text-sm pr-10"
+                            />
+                            <Button
+                              type="button"
+                              variant="ghost"
+                              size="icon"
+                              className="absolute right-0 top-0 h-full px-3 hover:bg-transparent"
+                              onClick={() => togglePassword(`${env.name}-cassandra`)}
+                            >
+                              {showPasswords[`${env.name}-cassandra`] ? (
+                                <EyeOff className="h-4 w-4 text-muted-foreground" />
+                              ) : (
+                                <Eye className="h-4 w-4 text-muted-foreground" />
+                              )}
+                            </Button>
+                          </div>
+                        </div>
+                      </div>
+
+                      <Button
+                        variant="outline"
+                        size="sm"
+                        onClick={() => testConnection(env.name, "cassandra")}
+                        disabled={testingConnection?.env === env.name && testingConnection?.section === "cassandra"}
+                        className="w-full"
+                      >
+                        {testingConnection?.env === env.name && testingConnection?.section === "cassandra" ? (
+                          <>
+                            <div className="h-4 w-4 border-2 border-primary border-t-transparent rounded-full animate-spin mr-2" />
+                            Testing Connection...
+                          </>
+                        ) : (
+                          <>
+                            <HardDrive className="h-4 w-4 mr-2" />
+                            Test Cassandra Connection
                           </>
                         )}
                       </Button>

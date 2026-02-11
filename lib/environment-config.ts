@@ -26,6 +26,15 @@ export interface UnixConfig {
   password: string
 }
 
+export interface CassandraConfig {
+  contactPoints: string
+  port: string
+  localDataCenter: string
+  keyspace: string
+  username: string
+  password: string
+}
+
 export interface EnvironmentConfig {
   name: Environment
   color: string
@@ -33,6 +42,7 @@ export interface EnvironmentConfig {
   auth: AuthConfig
   endpoint: EndpointConfig
   unix: UnixConfig
+  cassandra: CassandraConfig
   isConfigured: boolean
 }
 
@@ -63,6 +73,14 @@ export const defaultEnvironments: EnvironmentConfig[] = [
       userName: "",
       password: "",
     },
+    cassandra: {
+      contactPoints: "",
+      port: "9042",
+      localDataCenter: "",
+      keyspace: "",
+      username: "",
+      password: "",
+    },
   },
   {
     name: "SST",
@@ -88,6 +106,14 @@ export const defaultEnvironments: EnvironmentConfig[] = [
       hostName: "",
       port: "22",
       userName: "",
+      password: "",
+    },
+    cassandra: {
+      contactPoints: "",
+      port: "9042",
+      localDataCenter: "",
+      keyspace: "",
+      username: "",
       password: "",
     },
   },
@@ -117,6 +143,14 @@ export const defaultEnvironments: EnvironmentConfig[] = [
       userName: "",
       password: "",
     },
+    cassandra: {
+      contactPoints: "",
+      port: "9042",
+      localDataCenter: "",
+      keyspace: "",
+      username: "",
+      password: "",
+    },
   },
   {
     name: "DEV4ST",
@@ -142,6 +176,14 @@ export const defaultEnvironments: EnvironmentConfig[] = [
       hostName: "",
       port: "22",
       userName: "",
+      password: "",
+    },
+    cassandra: {
+      contactPoints: "",
+      port: "9042",
+      localDataCenter: "",
+      keyspace: "",
+      username: "",
       password: "",
     },
   },
@@ -171,6 +213,14 @@ export const defaultEnvironments: EnvironmentConfig[] = [
       userName: "",
       password: "",
     },
+    cassandra: {
+      contactPoints: "",
+      port: "9042",
+      localDataCenter: "",
+      keyspace: "",
+      username: "",
+      password: "",
+    },
   },
  {
     name: "DEV360",
@@ -198,6 +248,14 @@ export const defaultEnvironments: EnvironmentConfig[] = [
       userName: "",
       password: "",
     },
+    cassandra: {
+      contactPoints: "",
+      port: "9042",
+      localDataCenter: "",
+      keyspace: "",
+      username: "",
+      password: "",
+    },
   },
 
 ]
@@ -214,5 +272,15 @@ export function isEnvironmentConfigured(env: EnvironmentConfig) {
     !!env.unix.hostName &&
     !!env.unix.userName &&
     !!env.unix.password
+  )
+}
+
+export function isCassandraConfigured(cassandra: CassandraConfig) {
+  return (
+    !!cassandra.contactPoints &&
+    !!cassandra.localDataCenter &&
+    !!cassandra.keyspace &&
+    !!cassandra.username &&
+    !!cassandra.password
   )
 }
