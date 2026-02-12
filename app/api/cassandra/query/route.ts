@@ -2,12 +2,12 @@ import { NextResponse } from "next/server"
 
 interface CassandraQueryRequest {
   cassandra: {
-    contactPoints: string
+    host: string
     port: string
-    localDataCenter: string
     keyspace: string
     username: string
     password: string
+    useSSL: boolean
   }
   query: string
   params?: unknown[]
@@ -18,7 +18,7 @@ export async function POST(request: Request) {
     const body: CassandraQueryRequest = await request.json()
     const { cassandra, query, params } = body
 
-    const contactPointsList = cassandra.contactPoints
+    const contactPointsList = cassandra.host
       .split(",")
       .map((cp) => cp.trim())
       .filter(Boolean)
@@ -27,6 +27,7 @@ export async function POST(request: Request) {
       `[Cassandra Query] Executing on ${contactPointsList.join(", ")}:${cassandra.port}`
     )
     console.log(`[Cassandra Query] Keyspace: ${cassandra.keyspace}`)
+    console.log(`[Cassandra Query] SSL: ${cassandra.useSSL}`)
     console.log(`[Cassandra Query] Query: ${query.substring(0, 100)}...`)
 
     // Option 1: Use an external Cassandra proxy service if configured
@@ -38,10 +39,10 @@ export async function POST(request: Request) {
         body: JSON.stringify({
           contactPoints: contactPointsList,
           port: parseInt(cassandra.port, 10),
-          localDataCenter: cassandra.localDataCenter,
           keyspace: cassandra.keyspace,
           username: cassandra.username,
           password: cassandra.password,
+          useSSL: cassandra.useSSL,
           query,
           params: params || [],
         }),
@@ -63,9 +64,8 @@ export async function POST(request: Request) {
         cassandra.password
       )
 
-      const client = new Client({
+      const clientOptions: Record<string, unknown> = {
         contactPoints: contactPointsList,
-        localDataCenter: cassandra.localDataCenter,
         keyspace: cassandra.keyspace,
         protocolOptions: { port: parseInt(cassandra.port, 10) },
         authProvider: auth,
@@ -73,7 +73,15 @@ export async function POST(request: Request) {
           connectTimeout: 10000,
           readTimeout: 30000,
         },
-      })
+      }
+
+      if (cassandra.useSSL) {
+        clientOptions.sslOptions = {
+          rejectUnauthorized: false,
+        }
+      }
+
+      const client = new Client(clientOptions)
 
       await client.connect()
       console.log("[Cassandra Query] Connected successfully")

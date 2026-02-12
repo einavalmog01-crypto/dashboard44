@@ -79,7 +79,7 @@ const router = useRouter()
     setConnectionStatus((prev) => ({ ...prev, [`${envName}-unix`]: null }))
   }
 
-  const updateCassandraConfig = (envName: Environment, field: keyof CassandraConfig, value: string) => {
+  const updateCassandraConfig = (envName: Environment, field: keyof CassandraConfig, value: string | boolean) => {
     setConfigs((prev) => prev.map((c) => (c.name === envName ? { ...c, cassandra: { ...c.cassandra, [field]: value } } : c)))
     setConnectionStatus((prev) => ({ ...prev, [`${envName}-cassandra`]: null }))
   }
@@ -116,8 +116,7 @@ const router = useRouter()
           break
         case "cassandra":
           isValid = !!(
-            config.cassandra.contactPoints &&
-            config.cassandra.localDataCenter &&
+            config.cassandra.host &&
             config.cassandra.keyspace &&
             config.cassandra.username &&
             config.cassandra.password
@@ -404,12 +403,12 @@ const handleCancel = () => {
                         <div className="space-y-2">
                           <Label className="text-xs flex items-center gap-1.5">
                             <Server className="h-3 w-3 text-muted-foreground" />
-                            Contact Points
+                            Host
                           </Label>
                           <Input
-                            placeholder="e.g., 127.0.0.1, 10.0.0.2"
-                            value={getConfig(env.name).cassandra.contactPoints}
-                            onChange={(e) => updateCassandraConfig(env.name, "contactPoints", e.target.value)}
+                            placeholder="e.g., 10.234.28.52"
+                            value={getConfig(env.name).cassandra.host}
+                            onChange={(e) => updateCassandraConfig(env.name, "host", e.target.value)}
                             className="bg-background/50 border-border text-sm"
                           />
                         </div>
@@ -427,31 +426,17 @@ const handleCancel = () => {
                         </div>
                       </div>
 
-                      <div className="grid grid-cols-2 gap-4">
-                        <div className="space-y-2">
-                          <Label className="text-xs flex items-center gap-1.5">
-                            <Globe className="h-3 w-3 text-muted-foreground" />
-                            Local Data Center
-                          </Label>
-                          <Input
-                            placeholder="e.g., datacenter1"
-                            value={getConfig(env.name).cassandra.localDataCenter}
-                            onChange={(e) => updateCassandraConfig(env.name, "localDataCenter", e.target.value)}
-                            className="bg-background/50 border-border text-sm"
-                          />
-                        </div>
-                        <div className="space-y-2">
-                          <Label className="text-xs flex items-center gap-1.5">
-                            <Database className="h-3 w-3 text-muted-foreground" />
-                            Keyspace
-                          </Label>
-                          <Input
-                            placeholder="e.g., my_keyspace"
-                            value={getConfig(env.name).cassandra.keyspace}
-                            onChange={(e) => updateCassandraConfig(env.name, "keyspace", e.target.value)}
-                            className="bg-background/50 border-border text-sm"
-                          />
-                        </div>
+                      <div className="space-y-2">
+                        <Label className="text-xs flex items-center gap-1.5">
+                          <Database className="h-3 w-3 text-muted-foreground" />
+                          Keyspace
+                        </Label>
+                        <Input
+                          placeholder="e.g., system"
+                          value={getConfig(env.name).cassandra.keyspace}
+                          onChange={(e) => updateCassandraConfig(env.name, "keyspace", e.target.value)}
+                          className="bg-background/50 border-border text-sm"
+                        />
                       </div>
 
                       <div className="grid grid-cols-2 gap-4">
@@ -495,6 +480,28 @@ const handleCancel = () => {
                             </Button>
                           </div>
                         </div>
+                      </div>
+
+                      <div className="flex items-center gap-2">
+                        <input
+                          type="checkbox"
+                          id={`${env.name}-cassandra-ssl`}
+                          checked={getConfig(env.name).cassandra.useSSL}
+                          onChange={(e) => {
+                            setConfigs((prev) =>
+                              prev.map((c) =>
+                                c.name === env.name
+                                  ? { ...c, cassandra: { ...c.cassandra, useSSL: e.target.checked } }
+                                  : c,
+                              ),
+                            )
+                            setConnectionStatus((prev) => ({ ...prev, [`${env.name}-cassandra`]: null }))
+                          }}
+                          className="h-4 w-4 rounded border-border accent-primary"
+                        />
+                        <Label htmlFor={`${env.name}-cassandra-ssl`} className="text-xs cursor-pointer">
+                          Use SSL
+                        </Label>
                       </div>
 
                       <Button

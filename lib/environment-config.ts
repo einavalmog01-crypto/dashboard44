@@ -27,12 +27,12 @@ export interface UnixConfig {
 }
 
 export interface CassandraConfig {
-  contactPoints: string
+  host: string
   port: string
-  localDataCenter: string
   keyspace: string
   username: string
   password: string
+  useSSL: boolean
 }
 
 export interface EnvironmentConfig {
@@ -74,12 +74,12 @@ export const defaultEnvironments: EnvironmentConfig[] = [
       password: "",
     },
     cassandra: {
-      contactPoints: "",
+      host: "",
       port: "9042",
-      localDataCenter: "",
       keyspace: "",
       username: "",
       password: "",
+      useSSL: false,
     },
   },
   {
@@ -109,12 +109,12 @@ export const defaultEnvironments: EnvironmentConfig[] = [
       password: "",
     },
     cassandra: {
-      contactPoints: "",
+      host: "",
       port: "9042",
-      localDataCenter: "",
       keyspace: "",
       username: "",
       password: "",
+      useSSL: false,
     },
   },
   {
@@ -144,12 +144,12 @@ export const defaultEnvironments: EnvironmentConfig[] = [
       password: "",
     },
     cassandra: {
-      contactPoints: "",
+      host: "",
       port: "9042",
-      localDataCenter: "",
       keyspace: "",
       username: "",
       password: "",
+      useSSL: false,
     },
   },
   {
@@ -179,12 +179,12 @@ export const defaultEnvironments: EnvironmentConfig[] = [
       password: "",
     },
     cassandra: {
-      contactPoints: "",
+      host: "",
       port: "9042",
-      localDataCenter: "",
       keyspace: "",
       username: "",
       password: "",
+      useSSL: false,
     },
   },
  {
@@ -214,12 +214,12 @@ export const defaultEnvironments: EnvironmentConfig[] = [
       password: "",
     },
     cassandra: {
-      contactPoints: "",
+      host: "",
       port: "9042",
-      localDataCenter: "",
       keyspace: "",
       username: "",
       password: "",
+      useSSL: false,
     },
   },
  {
@@ -249,12 +249,12 @@ export const defaultEnvironments: EnvironmentConfig[] = [
       password: "",
     },
     cassandra: {
-      contactPoints: "",
+      host: "",
       port: "9042",
-      localDataCenter: "",
       keyspace: "",
       username: "",
       password: "",
+      useSSL: false,
     },
   },
 
@@ -277,8 +277,7 @@ export function isEnvironmentConfigured(env: EnvironmentConfig) {
 
 export function isCassandraConfigured(cassandra: CassandraConfig) {
   return (
-    !!cassandra.contactPoints &&
-    !!cassandra.localDataCenter &&
+    !!cassandra.host &&
     !!cassandra.keyspace &&
     !!cassandra.username &&
     !!cassandra.password
